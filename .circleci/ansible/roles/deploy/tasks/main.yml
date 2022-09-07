@@ -1,27 +1,32 @@
 ---
+- name: Creates directory
+  file:
+    path: ~/repos
+    state: directory
+
 - name: Clone a github repository
   git:
     repo: https://github.com/omar-bakr/cdond-c3
-    dest: ~/
+    dest: ~/repos
     clone: yes
     update: yes
 
 - name: "Installing Node Dependencies"
   shell: |
-    cd ~/cdond-c3/backend
+    cd ~/repos/cdond-c3/backend
     npm install
 
 - name: "Tracing"
   shell: |
     curl ifconfig.me
-    cd ~/cdond-c3/backend
+    cd ~/repos/cdond-c3/backend
     ls
   register: tracing
 
      
 - name: "Executing Node app with PM2"
   shell: |
-    cd ~/cdond-c3/backend
+    cd ~/repos/cdond-c3/backend
     pm2 stop default
     pm2 start main.js
   register: execute_node
