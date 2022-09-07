@@ -214,7 +214,7 @@ jobs:
           command: |   
               if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
               then
-                  curl https://kvdb.io/4qbFP8WfVGU4SEw1uLoAGv/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
+                  curl --insecure https://kvdb.io/4qbFP8WfVGU4SEw1uLoAGv/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
               fi
       - revert-migrations:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -287,3 +287,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
