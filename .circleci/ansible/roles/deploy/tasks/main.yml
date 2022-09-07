@@ -1,30 +1,27 @@
 ---
-- name: "Creates backend app directory"
-  file:
-    path: ~/backend-app
-    state: directory
-
-- name: "Unarchive backend files"
-  unarchive:
-    src: artifact.tar.gz
-    dest: ~/backend-app
+- name: Clone a github repository
+  git:
+    repo: https://github.com/omar-bakr/cdond-c3
+    dest: ~/
+    clone: yes
+    update: yes
 
 - name: "Installing Node Dependencies"
   shell: |
-    cd ~/backend-app
+    cd ~/cdond-c3/backend
     npm install
 
 - name: "Tracing"
   shell: |
     curl ifconfig.me
-    cd ~/backend-app
+    cd ~/cdond-c3/backend
     ls
-  register: execute_node
+  register: tracing
 
      
 - name: "Executing Node app with PM2"
   shell: |
-    cd ~/backend-app/dist
+    cd ~/cdond-c3/backend
     pm2 stop default
     pm2 start main.js
   register: execute_node
@@ -32,6 +29,10 @@
 - name: print message
   debug:
     msg: "{{ execute_node.stdout_lines }}"
+
+- name: print message
+  debug:
+    msg: "{{ tracing.stdout_lines }}"
 
 - name: "Configure pm2 to start as service"
   become: true
