@@ -16,14 +16,6 @@
     cd ~/repos/cdond-c3/backend
     npm install
 
-- name: "Tracing"
-  shell: |
-    curl ifconfig.me
-    cd ~/repos/cdond-c3/backend
-    ls
-  register: tracing
-
-     
 - name: "Executing Node app with PM2"
   shell: |
     cd ~/repos/cdond-c3/backend/dist
@@ -34,10 +26,6 @@
 - name: print message
   debug:
     msg: "{{ execute_node.stdout_lines }}"
-
-- name: print message
-  debug:
-    msg: "{{ tracing.stdout_lines }}"
 
 - name: "Configure pm2 to start as service"
   become: true
