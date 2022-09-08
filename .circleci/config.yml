@@ -303,10 +303,9 @@ jobs:
             cd ~/project/backend
             npm i
             npm run build
-            cd dist
-            cp ../package.json .
-            zip -rq dist.zip *
-            mv dist.zip ~/project/.circleci/ansible/roles/deploy_backend/files/
+            tar -czf artifact.tar.gz dist/* package*
+            cd ..
+            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
       - run:
           name: Setup EC2 instance & copy compiled backend to the EC2 instance
           command: |
