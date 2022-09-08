@@ -1,36 +1,42 @@
 ---
-- name: "Creates backend app directory"
-  file:
-    path: ~/backend_app
-    state: directory
+  - name: "Creates backend app directory"
+    file:
+      path: /home/backed-app
+      state: directory
 
-- name: "Copy compiled backend app"
-  copy:
-    src: artifact.tar.gz
-    dest: "~/backend_app/artifact.tar.gz"
-    
-- name: "Unarchive backend files"
-  unarchive:
-    src: artifact.tar.gz
-    dest: ~/backend_app
+  - name: "Unarchive backend files"
+    unarchive:
+      src: "files/artifact.tar.gz"
+      dest: "/home/backed-app"
 
-- name: "Install dependencies for project"
-  shell: |
-    cd ~/backend_app
-    npm install
+  - name: "Installing Node Dependencies"
+    shell: |
+      cd /home/backed-app
+      npm install
+  
+  - name: "Executing Node app with PM2"
+    shell: |
+      cd /home/backed-app/dist
+      pm2 start main.js
+    environment:
+      NODE_ENV: production
+      VERSION: "1"
+      TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION')}}"
+      TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES')}}"
+      TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST')}}"
+      TYPEORM_PORT: 5432
+      TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME')}}"
+      TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD')}}"
+      TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE')}}"
+      TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}"
+      TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
+    register: execute_node
 
-- name: "Executing node"
-  shell: |
-    export
-    cd ~/backend_app/dist
-    pm2 stop default
-    pm2 start main.js
-  register: execute_node
+  - name: print message
+    debug:
+      msg: "{{ execute_node.stdout_lines }}"
 
-- name: print message
-  debug:
-    msg: "{{ execute_node.stdout_lines }}"
-
-- name: "Configure pm2 to start as service"
-  shell: |
-    env PATH=$PATH:/usr/local/bin pm2 startup -u ubuntu
+  - name: "Configure pm2 to start as service"
+    become: true
+    shell: |
+      env PATH=$PATH:/usr/local/bin pm2 startup systemd -u ubuntu --hp /home/ubuntu
