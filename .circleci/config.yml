@@ -34,16 +34,13 @@ commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
     parameters:
-      when_to_run:
-        type: string
-        default: "on_fail"
       Workflow_ID:
         type: string
         default: ${CIRCLE_WORKFLOW_ID:0:5}   
     steps:
       - run:
           name: Destroy environments
-          when: << parameters.when_to_run >>
+          when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.Workflow_ID >>
             aws s3 rm s3://udapeople-<< parameters.Workflow_ID >> --recursive
@@ -142,8 +139,9 @@ jobs:
           command: |
             cd frontend
             npm install
-            npm audit fix --audit-level=critical
-
+            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
+            
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -156,7 +154,9 @@ jobs:
           command: |
             cd backend
             npm install
-            npm audit fix --audit-level=critical
+            npm audit fix --audit-level=critical --force
+            npm audit fix --audit-level=critical --force
+            npm audit --audit-level=critical
 
   deploy-infrastructure:
     docker:
@@ -200,7 +200,7 @@ jobs:
       - install_ansible
       - install_nodejs
       - add_ssh_keys:
-          fingerprints: ["2a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]
+          fingerprints: ["a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]
       - attach_workspace:
           at: ~/
       - run:
