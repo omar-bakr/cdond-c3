@@ -195,30 +195,30 @@ jobs:
       - destroy-environment:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
-  configure-infrastructure:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - add_ssh_keys:
-          fingerprints: ["a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]  
-      - attach_workspace:
-          at: ~/ 
-      - run:
-          name: Install dependencies
-          command: |
-            apk add curl
-            apk add --upgrade bash
-            apk add --update ansible
-            apk add openssh-client
-            pip3 install awscli
-      - run:
-          name: Configure server
-          command: |
-            cd .circleci/ansible
-            ansible-playbook -i inventory.txt configure-server.yml
-      - destroy-environment:
-          workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+  # configure-infrastructure:
+  #   docker:
+  #     - image: python:3.7-alpine3.11
+  #   steps:
+  #     - checkout
+  #     - add_ssh_keys:
+  #         fingerprints: ["a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]  
+  #     - attach_workspace:
+  #         at: ~/ 
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           apk add curl
+  #           apk add --upgrade bash
+  #           apk add --update ansible
+  #           apk add openssh-client
+  #           pip3 install awscli
+  #     - run:
+  #         name: Configure server
+  #         command: |
+  #           cd .circleci/ansible
+  #           ansible-playbook -i inventory.txt configure-server.yml
+  #     - destroy-environment:
+  #         workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
 
   run-migrations:
     docker:
@@ -287,40 +287,38 @@ jobs:
 
   deploy-backend:
     docker:
-      - image: cimg/base:stable
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - attach_workspace:
           at: ~/ 
       - restore_cache:
           keys: [backend-build]
-      - install_awscli
-      - install_nodejs
-      - install_ansible
-      - add_ssh_keys:
-          fingerprints: ["a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]  
       - run:
           name: Install dependencies
           command: |
-            cd backend
-            npm install
+            apk add --update curl nodejs npm ansible zip
+            pip install awscli
+      - add_ssh_keys:
+          fingerprints: ["a5:7c:7b:51:0f:cb:37:66:7a:a9:df:d6:55:3e:bd:57"]  
       - run:
-          name: Package Backend
+          name: Build backend app
           command: |
-            cd backend
+            cd ~/project/backend
+            npm i
             npm run build
-            tar -czf artifact.tar.gz dist/* package*
-            cd ..
-            cp backend/artifact.tar.gz .circleci/ansible/roles/deploy/files
+            cd dist
+            cp ../package.json .
+            zip -rq dist.zip *
+            mkdir -p ~/project/.circleci/ansible/roles/deploy_backend/files/
+            mv dist.zip ~/project/.circleci/ansible/roles/deploy_backend/files/
       - run:
-          name: Deploy backend
+          name: Setup EC2 instance & copy compiled backend to the EC2 instance
           command: |
-            export TYPEORM_MIGRATIONS_DIR=./migrations
-            export TYPEORM_ENTITIES=./modules/domain/**/*.entity{.ts,.js}
-            export TYPEORM_MIGRATIONS=./migrations/*.ts
-            cd .circleci/ansible
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            ls ~/project/.circleci/ansible/roles/deploy_backend/files/
+            cd ~/project/backend
+            ansible-galaxy install weareinteractive.environment
+            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
       - revert-migrations:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
@@ -384,8 +382,8 @@ workflows:
           filters:
             branches:
               only: [master]
-      - configure-infrastructure:
-          requires: [deploy-infrastructure]
+      # - configure-infrastructure:
+      #     requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
