@@ -227,18 +227,14 @@ jobs:
       - checkout
       - restore_cache:
           keys: [backend-build]
-      - run:
-          name: Install AWS CLI v2
-          command: |
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
+      - install_awscli
       - run:
           name: Run migrations
           command: |
             cd backend
             npm install
             npm run migrations > migrations_dump.txt
+            cat  ~/project/backend/migrations_dump.txt
       - run:
           name: Send migration results to kvdb.io
           command: |   
@@ -310,7 +306,6 @@ jobs:
             cd dist
             cp ../package.json .
             zip -rq dist.zip *
-            mkdir -p ~/project/.circleci/ansible/roles/deploy_backend/files/
             mv dist.zip ~/project/.circleci/ansible/roles/deploy_backend/files/
       - run:
           name: Setup EC2 instance & copy compiled backend to the EC2 instance
