@@ -312,7 +312,7 @@ jobs:
             ls ~/project/.circleci/ansible/roles/deploy/files/
             cd ~/project/backend
             ansible-galaxy install weareinteractive.environment
-            ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
+            ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ~/project/.circleci/ansible/inventory.txt ~/project/.circleci/ansible/configure-server.yml
       - revert-migrations:
           workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
       - destroy-environment:
