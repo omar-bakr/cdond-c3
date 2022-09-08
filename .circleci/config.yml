@@ -218,8 +218,9 @@ jobs:
             echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
 
-            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/configure-server.yml
-            cat ".circleci/ansible/inventory.txt"
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+            cat inventory.txt
       - run:
           name: configure node-exporter
           command: |
