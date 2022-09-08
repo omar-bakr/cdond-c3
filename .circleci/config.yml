@@ -1,6 +1,4 @@
 version: 2.1
-orbs: 
-  slack: circleci/slack@4.10.1
 
 commands:
   install_ansible:
@@ -148,9 +146,6 @@ jobs:
             cd frontend
             npm install
             npm audit fix --audit-level=critical
-      - slack/notify:
-          event: fail
-          template: basic_fail_1
 
   scan-backend:
     docker:
@@ -426,7 +421,7 @@ jobs:
 
 
 workflows:
-  udapeople:
+  default:
     jobs:
       - build-frontend
       - build-backend
