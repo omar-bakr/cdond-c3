@@ -379,7 +379,6 @@ jobs:
             export OLD_WORKFLOW_ID=$(aws cloudformation \
                 list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
                 --no-paginate --output text)
-            echo "Old Wokflow ID: $OLD_WORKFLOW_ID"
             curl https://kvdb.io/4qbFP8WfVGU4SEw1uLoAGv/old_workflow_id -d "${OLD_WORKFLOW_ID}"
       - run:
           name: Update cloudfront distribution
@@ -387,7 +386,10 @@ jobs:
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:5}" \
-              --stack-name InitialStack
+              --stack-name FinalStack
+            echo CurrentWokflowID:"${CIRCLE_WORKFLOW_ID:0:5}"
+
+
       - destroy-environment
       - revert-migrations
   
